@@ -23,9 +23,9 @@ const USER_AGENT = "mtg-quizzer/0.1 (nick@heise.org)";
 
 // The sets to include in the quiz, by Scryfall set code. Add a code here and
 // re-run `npm run fetch` to make a set selectable in the app. Sets that are
-// still in spoiler season (e.g. HOB) come down partial and grow as more cards
+// still in spoiler season (e.g. TRK) come down partial and grow as more cards
 // are previewed — just re-fetch to pick them up.
-const SETS = ["msh", "hob"];
+const SETS = ["msh", "hob", "fra", "trk"];
 
 // `-t:basic` excludes every card with the Basic supertype (including full-art
 // printings). Note: `-is:basic` does NOT work for MSH — Scryfall still returns
