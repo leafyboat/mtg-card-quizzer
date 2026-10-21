@@ -49,7 +49,8 @@ running dev server (e.g. with headless Chrome).
     quiz field (`pickQuizField`, random among a card's *available* quiz fields),
     filter the deck to `eligibleCards`, and narrow it to the chosen sets
     (`cardsInSets`). A first-time visitor gets `defaultSelectedSets` — just the
-    newest set by `released`. Always keeps ≥1 field set to quiz, and the UI
+    newest set already out (`released` ≤ today), so a set in spoiler season
+    takes over on its release day. Always keeps ≥1 field set to quiz, and the UI
     always keeps ≥1 set selected.
   - `progress.ts` — per-card weights + stats in `localStorage` (spaced
     repetition: a miss raises a card's weight, a correct answer lowers it).

@@ -77,18 +77,30 @@ export function eligibleCards(
 // so it lives under its own localStorage key. The stored value is a list of
 // Scryfall set codes; anything no longer in the manifest is ignored.
 
-// The default for a brand-new visitor: just the most recently released set.
+// Today's date as YYYY-MM-DD (local time), comparable with a set's `released`.
+function todayIso(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// The default for a brand-new visitor: just the most recently released set. A
+// set still in spoiler season (release date in the future) comes down partial,
+// so it only becomes the default once it's out — or if nothing is out yet.
 export function defaultSelectedSets(available: SetInfo[]): string[] {
-  if (available.length === 0) return [];
-  const latest = available.reduce((a, b) =>
+  const today = todayIso();
+  const released = available.filter((s) => s.released <= today);
+  const pool = released.length > 0 ? released : available;
+  if (pool.length === 0) return [];
+  const latest = pool.reduce((a, b) =>
     b.released.localeCompare(a.released) > 0 ? b : a,
   );
   return [latest.code];
 }
 
 // Load the player's chosen set codes, filtered to those still available. Falls
-// back to the newest set when nothing valid is stored (first visit, or every
-// stored code has since disappeared from the manifest).
+// back to the newest released set when nothing valid is stored (first visit,
+// or every stored code has since disappeared from the manifest).
 export function loadSelectedSets(available: SetInfo[]): string[] {
   const codes = new Set(available.map((s) => s.code));
   try {
