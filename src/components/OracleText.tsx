@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type { SymbolMap } from "../types.ts";
+import type { QuizCard, SymbolMap } from "../types.ts";
 import { cleanOracle } from "../game/formatText.ts";
+import { selfNameRegex } from "../game/redaction.ts";
 import { InlineSymbols } from "./SymbolText.tsx";
 
 // Matches an "ability word" prefix at the start of a line, e.g. "Power-up —"
@@ -8,37 +9,8 @@ import { InlineSymbols } from "./SymbolText.tsx";
 // the eye find the mechanic quickly when scanning options.
 const ABILITY_WORD = /^([A-Z][A-Za-z' -]{1,24}?) — /;
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-// The strings to black out: a card's own name spoils which card it is (oracle
-// text says "put a +1/+1 counter on Crossbones"). We redact each face's full
-// name plus its short "legend" name (the part before the first comma, which is
-// what the rules text usually uses). Longest first so the full name wins over
-// the short one.
-function redactionTargets(cardName: string): string[] {
-  const targets = new Set<string>();
-  for (const face of cardName.split(" // ")) {
-    const full = face.trim();
-    if (full) targets.add(full);
-    const short = full.split(",")[0].trim();
-    if (short) targets.add(short);
-  }
-  return [...targets].sort((a, b) => b.length - a.length);
-}
-
-// Case-sensitive, whole-word match of any name. A leading boundary group (in
-// place of a lookbehind, which older Safari lacks) keeps us from matching
-// inside another word; the trailing lookahead leaves any possessive "'s" alone.
-function buildNameRegex(cardName: string): RegExp | null {
-  const targets = redactionTargets(cardName);
-  if (targets.length === 0) return null;
-  const alt = targets.map(escapeRegExp).join("|");
-  return new RegExp(`(^|[^A-Za-z0-9])(${alt})(?![A-Za-z0-9])`, "g");
-}
-
-// Renders one line, blacking out the card's own name and drawing mana symbols.
+// Renders one line, blacking out the card's own name (see game/redaction.ts)
+// and drawing mana symbols.
 function renderLine(
   line: string,
   symbols: SymbolMap,
@@ -52,8 +24,10 @@ function renderLine(
   let m: RegExpExecArray | null;
   nameRegex.lastIndex = 0;
   while ((m = nameRegex.exec(line)) !== null) {
+    // A keyword that contains the name stays part of the plain text run.
+    if (m[2] !== undefined) continue;
     const boundary = m[1];
-    const name = m[2];
+    const name = m[3];
     const textEnd = m.index + boundary.length;
     if (textEnd > last) {
       nodes.push(
@@ -77,16 +51,14 @@ function renderLine(
 // line, ability words italicized, "//" shown as a face divider, the card's own
 // name blacked out, and mana symbols drawn as icons.
 export function OracleText({
-  text,
-  cardName,
+  card,
   symbols,
 }: {
-  text: string;
-  cardName: string;
+  card: QuizCard;
   symbols: SymbolMap;
 }) {
-  const lines = cleanOracle(text).split("\n");
-  const nameRegex = buildNameRegex(cardName);
+  const lines = cleanOracle(card.oracleText).split("\n");
+  const nameRegex = selfNameRegex(card);
 
   return (
     <>

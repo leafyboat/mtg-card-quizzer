@@ -17,9 +17,7 @@ export function FieldValue({
 }) {
   switch (field) {
     case "oracleText":
-      return (
-        <OracleText text={card.oracleText} cardName={card.name} symbols={symbols} />
-      );
+      return <OracleText card={card} symbols={symbols} />;
     case "manaCost":
       return <SymbolText text={card.manaCost} symbols={symbols} />;
     default:

@@ -5,7 +5,8 @@ Guidance for working in this repo.
 ## What this is
 
 A static (no-backend) Vite + React + TypeScript single-page app for learning MTG
-sets — currently **Marvel Super Heroes** (`MSH`) and **The Hobbit** (`HOB`). It
+sets — currently **Marvel Super Heroes** (`MSH`), **The Hobbit** (`HOB`),
+**Reality Fracture** (`FRA`) and **Star Trek** (`TRK`). It
 shows a card (art + name + primary type + whatever the player routes to the
 prompt) and asks them to pick one of its parts from six same-type options. Which
 part goes in the prompt vs. is quizzed vs. hidden is player-configurable (oracle
@@ -60,6 +61,8 @@ running dev server (e.g. with headless Chrome).
     stays within one set even when several are selected. `OPTION_COUNT` lives
     here.
   - `formatText.ts` — `cleanOracle()` strips reminder text and tidies whitespace.
+  - `redaction.ts` — `selfNameRegex()`: which forms of a card's own name get
+    blacked out of its rules text (see Self-name redaction below).
   - `frame.ts` — `frameFor()` maps a card to its printed frame colour
     (`w`/`u`/`b`/`r`/`g`/`gold`/`artifact`/`land`); `promptFrame(card, settings)`
     is the one to call — it returns `neutral` instead whenever showing the
@@ -110,7 +113,9 @@ running dev server (e.g. with headless Chrome).
   with an explicit `User-Agent`; keep that if you touch the fetch.
 - **Double-faced cards are split per face.** `SPLIT_LAYOUTS` (`modal_dfc`,
   `transform`) emit one quiz entry per `card_faces[]` face, each with id
-  `<scryfallId>-<i>`. Other layouts stay single entries.
+  `<scryfallId>-<i>`. Other layouts stay single entries — HOB's adventures and
+  FRA's prepared creatures read `Creature // Spell`, both texts in one answer
+  split by a divider.
 - **Sagas** are laid out like a printed Saga: chapter-text column (the text box
   / placeholder) on the left, art panel on the right, type line beneath
   (`.card-saga-body` in `CardPrompt`). The answer tiles go portrait for Saga
@@ -120,9 +125,18 @@ running dev server (e.g. with headless Chrome).
   `--saga-ar`, shown in full); a few legacy ones are landscape and bundle the
   spoiler chapter-text column on the left (`--saga-wide`, cropped to the art on
   the right). Never show a raw landscape saga art_crop uncropped — it spoils.
-- **Self-name redaction** lives in `OracleText.tsx`: a card's own name (full +
-  pre-comma short name, per face) is blacked out so the text can't spoil the
-  answer. Case-sensitive, whole-word, no lookbehind (older-Safari safe).
+- **Self-name redaction** — rules in `game/redaction.ts`, drawn by
+  `OracleText.tsx`: a card's own name is blacked out so the text can't spoil the
+  answer. Per face that's the full and pre-comma short name; for a legendary,
+  also the name before its first lowercase word ("Gollum the Abandoned" →
+  "Gollum") and, at 3+ words, first + last word ("Captain James T. Kirk" →
+  "Captain Kirk"); for a planeswalker, its planeswalker type ("Ajani Resolute" →
+  "Ajani"). A keyword that contains the name stays readable — FRA's "Empower
+  Jace" on *Jace, Reality Sculptor* is a mechanic, and a bar there would single
+  the card out. Known miss: plain two-word names ("Dáin Ironfoot" says "Dáin");
+  a first-word rule would also black out creature types in token text. Check a
+  new set's legends against these rules. Case-sensitive, whole-word, no
+  lookbehind (older-Safari safe).
 - **The frame colour is a spoiler.** `promptFrame()` only tints the frame (and
   the answer boxes) with the card's real colour when the mana cost is already
   routed to the prompt; otherwise it returns `neutral`, so a quizzed mana cost
@@ -131,13 +145,15 @@ running dev server (e.g. with headless Chrome).
   training). The prompt always shows `primaryType` to match; the type line's
   *subtypes* are the configurable `typeLine` field.
 - **A set still in spoiler season comes down partial** (HOB was 44 of 108 cards
-  as of 2026-07-21) and may include Scryfall placeholder entries whose names are
-  wrapped in double quotes. Re-fetch to fill them in.
+  as of 2026-07-21; TRK was 153 cards as of 2026-10-21) and may include Scryfall
+  placeholder entries whose names are wrapped in double quotes. Re-fetch to fill
+  them in.
 - **Keywords** come from Scryfall's `keywords` field, recorded by
   `fetch-cards.mjs` into `cards.json` (so `npm run fetch` must have run against a
   reachable `api.scryfall.com` for the keywords field to be populated).
-- Regenerating data is safe and idempotent: `npm run fetch`. MSH releases
-  2026-06-26 and HOB 2026-08-14, so re-fetch to pick up Scryfall updates.
+- Regenerating data is safe and idempotent: `npm run fetch` (the daily
+  `update-cards` workflow also runs it and commits to `main`). TRK releases
+  2026-11-13, so re-fetch to pick up the rest of its cards.
 
 ## Conventions
 

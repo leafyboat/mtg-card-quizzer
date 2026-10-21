@@ -5,7 +5,8 @@ card's art and name, gives you some of its info, then asks you to pick another
 part of it from six options — training fast "see the card → recall what it
 does" recognition.
 
-Currently ships with **Marvel Super Heroes** (`MSH`) and **The Hobbit** (`HOB`).
+Currently ships with **Marvel Super Heroes** (`MSH`), **The Hobbit** (`HOB`),
+**Reality Fracture** (`FRA`) and **Star Trek** (`TRK`, still in previews).
 
 It's a fully static single-page app (no backend). Card data comes from
 [Scryfall](https://scryfall.com) and is pre-fetched into `public/cards.json`.
@@ -46,6 +47,6 @@ npm run build   # type-check + production build into dist/
 `npm run fetch` pulls every set listed in the `SETS` array at the top of
 `scripts/fetch-cards.mjs` (including each card's keywords). **To add a set**, add
 its Scryfall set code there and re-run the fetch — it shows up in the picker
-automatically. Re-run it to pick up data/art updates, too: MSH releases
-2026-06-26 and HOB 2026-08-14, and a set still in spoiler season comes down
-partial and grows as more cards are previewed.
+automatically. Re-run it to pick up data/art updates, too (a daily GitHub
+Actions workflow does this on `main`): a set still in spoiler season — TRK,
+releasing 2026-11-13 — comes down partial and grows as more cards are previewed.
